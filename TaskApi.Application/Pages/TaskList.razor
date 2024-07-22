@@ -1,0 +1,49 @@
+﻿@page "/tasks"
+@using TaskApi.Application.Services
+@inject TaskService TaskService
+
+<h3>Lista de Tarefas</h3>
+
+<a href="/tasks/new">Adicionar Nova Tarefa</a>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Descrição</th>
+            <th>Status</th>
+            <th>Criado em</th>
+            <th>Atualizado em</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var task in tasks)
+        {
+            <tr>
+                <td>@task.Description</td>
+                <td>@task.Status</td>
+                <td>@task.CreatedAt</td>
+                <td>@task.UpdatedAt</td>
+                <td>
+                    <a href="/tasks/edit/@task.Id">Editar</a>
+                    <button @onclick="() => DeleteTask((Guid)task.Id)">Excluir</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private List<TaskApi.Application.Models.Task> tasks;
+
+    protected override async Task OnInitializedAsync()
+    {
+        tasks = await TaskService.GetTasksAsync();
+    }
+
+    private async Task DeleteTask(Guid id)
+    {
+        await TaskService.DeleteTaskAsync(id);
+        tasks = await TaskService.GetTasksAsync();
+    }
+}

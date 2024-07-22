@@ -1,0 +1,61 @@
+﻿@page "/tasks/new"
+@page "/tasks/edit/{Id:guid}"
+@using TaskApi.Application.Services
+@inject TaskService TaskService
+@inject NavigationManager NavigationManager
+
+<h3>@(task.Id == null ? "Nova Tarefa" : "Editar Tarefa")</h3>
+
+<EditForm Model="task" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label for="description">Descrição</label>
+        <InputText id="description" class="form-control" @bind-Value="task.Description" />
+    </div>
+    <div class="form-group">
+        <label for="status">Status</label>
+        <InputSelect id="status" class="form-control" @bind-Value="task.Status">
+            <option value="0">Selecione</option>
+            @foreach (TaskApi.Application.Models.TaskStatus status in Enum.GetValues(typeof(TaskApi.Application.Models.TaskStatus)))
+            {
+                <option value="@status">@status</option>
+            }
+        </InputSelect>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Salvar</button>
+    <button type="button" class="btn btn-secondary">Cancelar</button>
+</EditForm>
+
+@code {
+    [Parameter] public Guid? Id { get; set; }
+    private TaskApi.Application.Models.Task task = new TaskApi.Application.Models.Task();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id != null)
+        {
+            task = await TaskService.GetTaskByIdAsync((Guid)Id);
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        if (task.Id == null)
+        {
+            task.Id = Guid.NewGuid();
+            task.CreatedAt = DateTime.Now;
+            task.Ativo = true;
+            await TaskService.AddTaskAsync(task);
+        }
+        else
+        {
+            task.UpdatedAt = DateTime.Now;
+            await TaskService.UpdateTaskAsync(task);
+        }
+
+        NavigationManager.NavigateTo("/tasks");
+    }
+}
